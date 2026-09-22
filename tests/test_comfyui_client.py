@@ -152,6 +152,12 @@ def test_remote_roundtrip(remote):
     session, _, path = remote
     result = generate(sampling="custom", steps=12)
     assert result["result"] == (str(path),)
+    assert result["ui"]["h3_videos"] == [
+        {"filename": path.name, "subfolder": "h3_api", "type": "output"}
+    ]
+    assert "test-key" not in json.dumps(result["ui"])
+    assert "dgx.example" not in json.dumps(result["ui"])
+    assert node.WEB_DIRECTORY == "./web"
     assert path.read_bytes() == b"test-mp4"
     assert session.headers == {"Authorization": "Bearer test-key"}
     assert session.trust_env is False
@@ -212,6 +218,7 @@ def test_archive_excludes_local_configuration(tmp_path):
     client = tmp_path / "comfyui_client"
     client.mkdir()
     for name in CLIENT_FILES:
+        (client / name).parent.mkdir(parents=True, exist_ok=True)
         (client / name).write_text("public source")
     for name in ("LICENSE", "NOTICE.md"):
         (tmp_path / name).write_text("public license")

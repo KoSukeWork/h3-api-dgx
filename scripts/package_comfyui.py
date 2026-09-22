@@ -4,7 +4,10 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CLIENT_FILES = ("__init__.py", "config.py", "config.example.json", "requirements.txt", "README.md", ".gitignore")
+CLIENT_FILES = (
+    "__init__.py", "config.py", "config.example.json", "requirements.txt", "README.md", ".gitignore",
+    "web/h3_video.js",
+)
 
 
 def build_archive(root=ROOT):

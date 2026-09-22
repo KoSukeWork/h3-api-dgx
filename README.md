@@ -60,6 +60,7 @@ SGLang commit、CUDA 基础镜像摘要、模型 revision 和 SHA256 固定；�
 uv sync --extra test --frozen
 uv run pytest -q
 uv run ruff check h3_api scripts production bootstrap tests examples comfyui_client
+node --experimental-vm-modules --test tests/comfyui_preview.test.mjs
 ```
 
 Windows 打包：

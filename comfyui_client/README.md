@@ -2,7 +2,7 @@
 
 将另一台机器上的 ComfyUI 连接到 H3 HTTP API：上传输入 → 提交任务 → 轮询 → 下载 MP4。
 H3 推理运行在 DGX 上，客户端不下载 H3 权重、不加载 H3 模型、不安装 SGLang/CUDA 推理依赖。
-本节点保留 `H3RemoteVideo` 类型，可更新已有工作流。它是后端 Python 自定义节点，不是网页前端插件。
+本节点保留 `H3RemoteVideo` 类型，可更新已有工作流。包含后端 Python 节点和视频预览前端扩展。
 
 ## Ubuntu 安装（包括 systemd 启动的 ComfyUI）
 
@@ -51,6 +51,9 @@ sudo systemctl restart comfyui.service
 配置文件存在时使用其中完整的 URL/Key；不存在时才回退到进程环境变量 `H3_API_URL`/`H3_API_KEY`。
 不把文件和环境变量中的半套配置混用；文件损坏或不完整时会报错，不静默回退。
 
+已有旧版时覆盖节点代码即可，务必一起复制新增的 `web/` 目录，保留原来的 `config.json`。
+重启 ComfyUI 后在浏览器强制刷新（Ctrl+Shift+R），加载前端扩展。不用修改 DGX 服务或重新填写密钥。
+
 ## 在工作流中使用
 
 搜索 `H3 Remote API Video (BF16)`，分类为 `H3 API`。
@@ -70,8 +73,17 @@ sudo systemctl restart comfyui.service
 这几档共用 DGX 上已加载的模型，不重启服务。4/8 次已有历史实测，其他次数仅提供参数，不保证更高画质。
 
 节点保存视频到 **ComfyUI 所在机器** 的 `output/h3_api/`，输出 STRING 类型的文件路径。
-可接收路径的后续节点继续读取 MP4。本节点不内置视频预览，也不直接输出 IMAGE/AUDIO/VIDEO 张量。
+不需要连接任何输出节点：生成完成后，节点内自动出现视频播放器、**下载 MP4** 和 **新窗口播放**。
+播放器带进度、音量及浏览器支持的全屏控制，点击播放可听到音频，不自动播放。
+下载链接把原始 MP4（含音轨）保存到 **浏览器所在电脑**；播放器不重新编码视频。
+如果浏览器不支持视频编码，可下载后用本地播放器打开。
+`video_path` 仍是 STRING，兼容后续路径读取节点，不直接输出 IMAGE/AUDIO/VIDEO 张量。
 API Key 和 URL 不会出现在节点的输入列表或工作流 JSON 中。
+
+预览与下载走 ComfyUI 自带的 `/view` 输出文件接口，浏览器不直接连接 DGX，不接收 H3 API Key。
+文件访问受 ComfyUI 自身的访问控制保护，不要把未鉴权的 ComfyUI 暴露到公网。
+预览文件必须保留在 ComfyUI 输出目录。旧版本执行记录没有预览元数据，升级不会自动补出旧记录的播放器。
+如果新生成后没有播放器，检查 `web/h3_video.js` 已安装且扩展未被禁用，重启并强制刷新浏览器。
 
 每次排队执行都会向远端提交新任务（不会复用 ComfyUI 上一次缓存结果），按“运行”前确认参数。
 生成状态会显示在 ComfyUI 的后端日志中；默认最多等待四小时。
@@ -93,4 +105,5 @@ HTTP 只适用于可信内网，跨网络访问应使用 HTTPS/VPN 及适当访�
 
 在仓库根目录运行 `python scripts/package_comfyui.py`，输出 `dist/h3-comfyui-client.zip`。
 包内顶层只有 `h3_api_client/`，只包含代码、示例配置、说明和许可，不包含真实配置或视频。
-CPU 测试覆盖配置与模拟 HTTP 工作流；首次在真实 ComfyUI/DGX 上仍需验收。
+CPU 测试覆盖配置与模拟 HTTP 工作流；`node --experimental-vm-modules --test tests/comfyui_preview.test.mjs`
+检查前端扩展的播放器、下载链接和生命周期。首次在真实 ComfyUI/DGX 上仍需验收。

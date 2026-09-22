@@ -185,10 +185,17 @@ class H3RemoteVideo:
                     except BaseException:
                         partial.unlink(missing_ok=True)
                         raise
-                    return {"ui": {"text": [str(path)]}, "result": (str(path),)}
+                    return {
+                        "ui": {
+                            "text": [str(path)],
+                            "h3_videos": [{"filename": path.name, "subfolder": "h3_api", "type": "output"}],
+                        },
+                        "result": (str(path),),
+                    }
                 time.sleep(2)
             raise TimeoutError(f"Wait expired; query task {job_id} through the API")
 
 
 NODE_CLASS_MAPPINGS = {"H3RemoteVideo": H3RemoteVideo}
 NODE_DISPLAY_NAME_MAPPINGS = {"H3RemoteVideo": "H3 Remote API Video (BF16)"}
+WEB_DIRECTORY = "./web"
