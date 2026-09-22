@@ -1,0 +1,7 @@
+FROM h3-api:gb10-bf16
+USER root
+RUN test "$(uname -m)" = aarch64
+# Only add the pinned ARM64 kernel wheel. Never replace torch or base dependencies.
+RUN uv pip install --python /opt/h3-api/inference-venv/bin/python --no-deps \
+    'https://files.pythonhosted.org/packages/45/9f/0495991518293be6ed02839516ff5140f76dc414d007c78f5e9dcf393038/comfy_kitchen-0.2.35-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl#sha256=33566331e23aa69784bb3730e218241efdca9410937f0a1f51e712818088ec05'
+USER h3:h3

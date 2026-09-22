@@ -1,0 +1,5 @@
+**
+!Dockerfile.int8
+!Dockerfile.turbo
+!patch_lora_compat.py
+!.dockerignore

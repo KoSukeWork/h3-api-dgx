@@ -1,0 +1,55 @@
+name: h3-service
+
+services:
+  h3-api:
+    image: h3-api:gb10-turbo-v1
+    platform: linux/arm64
+    build:
+      context: ..
+      dockerfile: production/Dockerfile
+    init: true
+    user: "10001:10001"
+    restart: unless-stopped
+    stop_grace_period: 90s
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    shm_size: 32gb
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+    environment:
+      H3_API_KEY: ${H3_API_KEY:?Run production/manage.py prepare first}
+      H3_MODELS_DIR: /srv/h3/models
+      H3_DATA_DIR: /srv/h3/data
+      H3_TURBO_LORA: /srv/h3/models/loras/minimax_h3_turbo_v4_step600_ema.safetensors
+      H3_LOAD_TIMEOUT: ${H3_LOAD_TIMEOUT:-2700}
+      H3_TASK_TIMEOUT: ${H3_TASK_TIMEOUT:-7200}
+    ports:
+      - "${H3_BIND_IP:-127.0.0.1}:${H3_PORT:-8000}:8000"
+    volumes:
+      - type: bind
+        source: /srv/h3/models
+        target: /srv/h3/models
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /srv/h3/service-data
+        target: /srv/h3/data
+        bind: {create_host_path: false}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "/opt/h3-api/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

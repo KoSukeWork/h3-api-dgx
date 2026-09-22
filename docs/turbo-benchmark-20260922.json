@@ -1,0 +1,135 @@
+{
+  "run_id": "20260922T100115Z-turbo-55",
+  "mode": "turbo",
+  "asset": {
+    "repo": "larryvrh/MiniMax-H3-Turbo-Lora",
+    "revision": "43a74557ac3f6539db8e0f2a959d03feb7a81480",
+    "file": "minimax_h3_turbo_v4_step600_ema.safetensors",
+    "bytes": 779849816,
+    "sha256": "5f3a626cd72c93a8b9318d6760c510bc5092d2ab13aaba1f932c5bab07a416d3"
+  },
+  "request_geometry": {
+    "task": "t2va",
+    "prompt": "A red toy car drives across a white table. Camera: static. Audio: quiet electric motor.",
+    "conditions": [],
+    "target": {
+      "short_edge": 768,
+      "aspect_ratio": "16:9",
+      "duration_seconds": 5
+    },
+    "seed": 42,
+    "quality": "lossless",
+    "num_inference_steps": 9
+  },
+  "results": [
+    {
+      "label": "warmup-4",
+      "nfe": 4,
+      "measured": false,
+      "api_wall_seconds": 260.79089336199104,
+      "file": "/srv/h3/data/benchmark/runs/20260922T100115Z-turbo-55/warmup-4.mp4",
+      "pipeline_seconds": 259.92,
+      "stages_seconds": {
+        "MiniMaxH3PartitionAdmissionStage": 0.0,
+        "MiniMaxH3TextEncodingStage": 3.8378,
+        "MiniMaxH3VisualEncodingStage": 0.0035,
+        "MiniMaxH3AudioEncodingStage": 0.0,
+        "MiniMaxH3LatentPreparationStage": 0.0196,
+        "MiniMaxH3TimestepPreparationStage": 0.0002,
+        "MiniMaxH3DenoisingStage": 200.5701,
+        "MiniMaxH3DecodingStage": 54.1335
+      }
+    },
+    {
+      "label": "turbo-8",
+      "nfe": 8,
+      "measured": true,
+      "api_wall_seconds": 441.2045321750047,
+      "file": "/srv/h3/data/benchmark/runs/20260922T100115Z-turbo-55/turbo-8.mp4",
+      "pipeline_seconds": 440.46,
+      "stages_seconds": {
+        "MiniMaxH3PartitionAdmissionStage": 0.0,
+        "MiniMaxH3TextEncodingStage": 3.7635,
+        "MiniMaxH3VisualEncodingStage": 0.0,
+        "MiniMaxH3AudioEncodingStage": 0.0,
+        "MiniMaxH3LatentPreparationStage": 0.0205,
+        "MiniMaxH3TimestepPreparationStage": 0.0002,
+        "MiniMaxH3DenoisingStage": 385.3299,
+        "MiniMaxH3DecodingStage": 49.8083
+      },
+      "speedup_vs_previous_baseline": 4.775734459428779
+    },
+    {
+      "label": "turbo-4",
+      "nfe": 4,
+      "measured": true,
+      "api_wall_seconds": 248.77547169399622,
+      "file": "/srv/h3/data/benchmark/runs/20260922T100115Z-turbo-55/turbo-4.mp4",
+      "pipeline_seconds": 248.1,
+      "stages_seconds": {
+        "MiniMaxH3PartitionAdmissionStage": 0.0,
+        "MiniMaxH3TextEncodingStage": 3.713,
+        "MiniMaxH3VisualEncodingStage": 0.0,
+        "MiniMaxH3AudioEncodingStage": 0.0,
+        "MiniMaxH3LatentPreparationStage": 0.02,
+        "MiniMaxH3TimestepPreparationStage": 0.0002,
+        "MiniMaxH3DenoisingStage": 193.5043,
+        "MiniMaxH3DecodingStage": 49.348
+      },
+      "speedup_vs_previous_baseline": 8.47851672712616
+    }
+  ],
+  "status": "completed",
+  "warmup_policy": "4-NFE warmup timed separately; startup probes off",
+  "baseline_reference_seconds": 2103.52,
+  "sglang_revision": "70b5b03e78612c94f86ac98eb4d2d8d19ceda738",
+  "gpu_and_driver": "NVIDIA GB10, 580.178.04",
+  "baseline_note": "Historical single BF16 run, not a repeated controlled benchmark; residency may differ.",
+  "baseline_comparable": true,
+  "quality_note": "Media checks do not establish visual or audio quality. Inspect the MP4s.",
+  "command": [
+    "/opt/h3-api/inference-venv/bin/sglang",
+    "serve",
+    "--model-path",
+    "/srv/h3/models/prepared/config/FL2VA",
+    "--model-subfolder",
+    ".",
+    "--num-gpus",
+    "1",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "30010",
+    "--enable-torch-compile",
+    "false",
+    "--input-save-path",
+    "/srv/h3/data/benchmark/runs/20260922T100115Z-turbo-55/sglang/inputs",
+    "--output-path",
+    "/srv/h3/data/benchmark/runs/20260922T100115Z-turbo-55/sglang/outputs",
+    "--component-weights-paths.text_encoder",
+    "/srv/h3/models/text_encoders/qwen3vl_32b_minimax_h3_bf16.safetensors",
+    "--component-weights-paths.video_vae",
+    "/srv/h3/models/vae/minimax_h3_video_vae_fp16.safetensors",
+    "--component-weights-paths.audio_vae",
+    "/srv/h3/models/vae/minimax_h3_audio_vae_fp32.safetensors",
+    "--component-weights-paths.transformer",
+    "/srv/h3/models/diffusion_models/minimax_h3_fl2va_bf16.safetensors",
+    "--warmup-mode",
+    "off",
+    "--lora-path",
+    "/srv/h3/data/benchmark/assets/turbo",
+    "--lora-weight-name",
+    "minimax_h3_turbo_v4_step600_ema.safetensors",
+    "--lora-nickname",
+    "h3-bench-larry-v4",
+    "--lora-scale",
+    "1.0",
+    "--lora-merge-mode",
+    "dynamic"
+  ],
+  "load_to_ready_seconds": 44.136929972009966,
+  "lora_activation": {
+    "applied_layers": 259,
+    "evidence": "[09-22 10:01:51] Rank 0: LoRA adapter(s) /srv/h3/data/benchmark/assets/turbo applied to 259 layers (targets: all, strengths: 1.00, merge_mode=dynamic)"
+  }
+}

@@ -1,0 +1,6 @@
+FROM h3-api:gb10-bf16
+USER root
+RUN test "$(uname -m)" = aarch64
+RUN --mount=type=bind,source=patch_lora_compat.py,target=/tmp/patch_lora_compat.py,ro \
+    /usr/bin/python3.12 /tmp/patch_lora_compat.py
+USER h3:h3

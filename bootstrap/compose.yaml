@@ -1,0 +1,42 @@
+name: h3-bootstrap
+
+services:
+  runtime:
+    profiles: [build]
+    image: h3-api:gb10-bf16
+    platform: linux/arm64
+    build:
+      context: ..
+      dockerfile: Dockerfile
+  turbo:
+    profiles: [build]
+    image: h3-bench:gb10-turbo
+    platform: linux/arm64
+    build:
+      context: ../benchmark
+      dockerfile: Dockerfile.turbo
+  download:
+    profiles: [setup]
+    image: h3-api:gb10-bf16
+    platform: linux/arm64
+    user: "0:0"
+    environment:
+      HF_HOME: /srv/h3/bootstrap-cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - /srv/h3/models:/srv/h3/models
+      - /srv/h3/bootstrap-cache:/srv/h3/bootstrap-cache
+      - ../scripts/download_models.py:/opt/h3-api/app/download_models.py:ro
+    command: ["/opt/h3-api/app/.venv/bin/python", "/opt/h3-api/app/download_models.py"]
+  prepare:
+    profiles: [setup]
+    image: h3-api:gb10-bf16
+    platform: linux/arm64
+    user: "0:0"
+    environment:
+      HF_HOME: /srv/h3/bootstrap-cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - /srv/h3/models:/srv/h3/models
+      - /srv/h3/bootstrap-cache:/srv/h3/bootstrap-cache
+    command: ["/opt/h3-api/app/.venv/bin/python", "-m", "h3_api.prepare", "--models", "/srv/h3/models"]

@@ -1,0 +1,68 @@
+name: h3-bench
+
+x-common: &common
+  image: h3-api:gb10-bf16
+  platform: linux/arm64
+  init: true
+  user: "10001:10001"
+  working_dir: /opt/h3-api/app
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  environment:
+    HF_HOME: /srv/h3/data/benchmark/cache/huggingface
+    XDG_CACHE_HOME: /srv/h3/data/benchmark/cache
+    TORCH_HOME: /srv/h3/data/benchmark/cache/torch
+    TRITON_CACHE_DIR: /srv/h3/data/benchmark/cache/triton
+    CUDA_CACHE_PATH: /srv/h3/data/benchmark/cache/cuda
+  volumes:
+    - type: bind
+      source: .
+      target: /bench
+      read_only: true
+      bind: {create_host_path: false}
+    - type: bind
+      source: /srv/h3/models
+      target: /srv/h3/models
+      read_only: true
+      bind: {create_host_path: false}
+    - type: bind
+      source: /srv/h3/data
+      target: /srv/h3/data
+      bind: {create_host_path: false}
+
+x-gpu: &gpu
+  resources:
+    reservations:
+      devices:
+        - driver: nvidia
+          count: 1
+          capabilities: [gpu]
+
+services:
+  download:
+    <<: *common
+    command: ["/opt/h3-api/app/.venv/bin/python", "/bench/assets.py", "turbo"]
+
+  turbo:
+    <<: *common
+    image: h3-bench:gb10-turbo
+    build:
+      context: .
+      dockerfile: Dockerfile.turbo
+    shm_size: 32gb
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+    deploy: *gpu
+    command: ["/opt/h3-api/app/.venv/bin/python", "/bench/run.py", "--mode", "turbo"]
+
+  int8:
+    <<: *common
+    image: h3-bench:gb10-int8
+    build:
+      context: .
+      dockerfile: Dockerfile.int8
+    shm_size: 32gb
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+    deploy: *gpu
+    command: ["/opt/h3-api/app/.venv/bin/python", "/bench/run.py", "--mode", "int8"]

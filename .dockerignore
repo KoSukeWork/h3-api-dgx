@@ -1,0 +1,19 @@
+# Allowlist: never send the 190 GB weights, local venv, Git history or API key.
+**
+!Dockerfile
+!.dockerignore
+!pyproject.toml
+!uv.lock
+!inference-constraints.txt
+!h3_api/
+!h3_api/*.py
+!examples/
+!examples/*.py
+!scripts/
+!scripts/check_output.py
+!scripts/install_ca.sh
+!scripts/check_inference_env.py
+!scripts/patch_h3_qkv.py
+!certs/
+!certs/README.md
+!certs/*.crt

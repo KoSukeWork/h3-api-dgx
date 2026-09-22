@@ -1,0 +1,10 @@
+**
+!production/
+!production/Dockerfile
+!production/Dockerfile.dockerignore
+!h3_api/
+!h3_api/*.py
+!examples/
+!examples/*.py
+!benchmark/
+!benchmark/patch_lora_compat.py
