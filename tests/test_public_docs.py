@@ -14,6 +14,7 @@ def public_documents():
         *(ROOT / "docs").glob("*.md"),
         ROOT / "production/README.md",
         ROOT / "benchmark/README.md",
+        ROOT / "comfyui_client/README.md",
     ]
 
 

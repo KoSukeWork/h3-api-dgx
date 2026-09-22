@@ -19,6 +19,9 @@ $h3Items = @($h3Candidates | Sort-Object -Unique | Where-Object {
         ($h3Directories | Where-Object { $h3Name.StartsWith($_, [StringComparison]::Ordinal) })
 })
 foreach ($h3Name in $h3Items) {
+    if ($h3Name -match '(^|/)comfyui_client/config\.json($|\.)') {
+        throw "Refusing local client credentials: $h3Name"
+    }
     if ($h3Name -match '(^|/)\.env($|\.(?!example$))|(^|/)__pycache__/|\.(pyc|crt|cer|der|pem|key|pfx|p12|safetensors|pt|pth|ckpt|mp4|wav|mp3|sqlite|sqlite3|db|log|whl|zip|tgz|7z|tar|tar\.gz)$') {
         throw "Refusing sensitive/generated archive entry: $h3Name"
     }

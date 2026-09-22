@@ -41,3 +41,5 @@ backups/
 *.7z
 certs/*
 !certs/README.md
+/comfyui_client/config.json
+/comfyui_client/config.json.*

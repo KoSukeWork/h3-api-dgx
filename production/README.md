@@ -128,8 +128,11 @@ sudo docker compose --env-file .env -f production/compose.yaml up -d
 密钥不要发到聊天、截图、工作流 JSON 或 Git。当前服务使用 HTTP，仅在可信内网使用；
 跨网段/公网访问前增加 HTTPS/访问控制。不要将监听地址直接改为全网开放。
 
-更新的 `comfyui_client` 复制到 ComfyUI 的 `custom_nodes/h3_api_client/`，重启 ComfyUI。
-为 ComfyUI 进程配置 `H3_API_URL=http://<DGX_LAN_IP>:8000`、`H3_API_KEY=<新密钥>`，均需替换占位符。
+将 `comfyui_client` 复制到 ComfyUI 的 `custom_nodes/h3_api_client/`，在其 Python 环境安装 requirements。
+推荐复制节点目录的 `config.example.json` 为 `config.json`，填写服务器根地址和纯 API key，
+确保 ComfyUI 服务用户可读（建议权限 600）。安装后重启一次 ComfyUI，不需要修改 systemd 配置。
+之后只改本地配置，下一次节点运行会重新读取；缺少文件时也支持原来的环境变量方式。
+完整 Ubuntu/systemd 步骤见 [节点安装说明](../comfyui_client/README.md)。
 节点新增 `sampling`：`server_default`、`fast`、`quality`、`custom`；仅 custom 时读取 `steps`。
 其他开发工具可直接调用同一 HTTP API，无需 ComfyUI。
 

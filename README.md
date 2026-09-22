@@ -17,6 +17,7 @@ ComfyUI 和其他开发工具均通过 HTTP 调用；模型在 DGX 的 ARM64/GB1
 | 新 DGX，没有之前的镜像或安装目录 | [从零部署](docs/FRESH_INSTALL.md) |
 | 换机、备份、回退，希望尽量复现已跑通环境 | [备份与恢复](docs/BACKUP_RESTORE.md) |
 | 想核对参数、测速及兼容补丁 | [部署记录](docs/DEPLOYMENT_RECORD.md) |
+| 在另一台 ComfyUI 上远程调用，无需本地 H3 权重 | [远程节点安装与配置](comfyui_client/README.md) |
 
 默认 8 次推理，支持按请求切换，不重新加载模型：
 
@@ -70,5 +71,8 @@ powershell -ExecutionPolicy Bypass -File scripts/package.ps1
 输出 `dist/h3-api-dgx.tar.gz`，只包含代码/文档；不会把本地证书、密钥、权重或 Git 历史打进去。
 打包须从 Git 工作目录执行，文件清单遵循 Git 忽略规则和打包白名单；内容仍需人工审查。
 对外发布前请按 [公开发布检查清单](docs/PUBLIC_RELEASE.md) 审查暂存区、历史和发布附件。
+
+仅打包 ComfyUI 客户端：`python scripts/package_comfyui.py`，生成 `dist/h3-comfyui-client.zip`。
+本地 `comfyui_client/config.json` 保存地址/密钥，不提交、不打包；只分发 `config.example.json`。
 
 软件与上游来源说明见 [NOTICE.md](NOTICE.md)；模型、CUDA 和第三方依赖受各自许可证约束。
