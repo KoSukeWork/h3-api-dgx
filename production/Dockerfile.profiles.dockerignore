@@ -1,0 +1,12 @@
+**
+!production/
+!production/Dockerfile.profiles
+!production/Dockerfile.profiles.dockerignore
+!h3_api/
+!h3_api/*.py
+!examples/
+!examples/*.py
+!benchmark/
+!benchmark/patch_lora_compat.py
+!benchmark/ref2va/
+!benchmark/ref2va/patch_reference.py

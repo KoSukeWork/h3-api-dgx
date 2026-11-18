@@ -18,6 +18,7 @@ class Settings:
     max_upload_bytes: int = 100 * 1024 * 1024
     max_queue: int = 32
     turbo_lora: Path | None = None
+    ref2va_lora: Path | None = None
 
     @property
     def backend_url(self):
@@ -37,4 +38,5 @@ class Settings:
             load_timeout=float(os.environ.get("H3_LOAD_TIMEOUT", "2700")),
             task_timeout=float(os.environ.get("H3_TASK_TIMEOUT", "7200")),
             turbo_lora=Path(os.environ["H3_TURBO_LORA"]) if os.environ.get("H3_TURBO_LORA") else None,
+            ref2va_lora=Path(os.environ["H3_REF2VA_LORA"]) if os.environ.get("H3_REF2VA_LORA") else None,
         )

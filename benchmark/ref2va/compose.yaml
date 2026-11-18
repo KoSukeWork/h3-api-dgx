@@ -1,0 +1,52 @@
+name: h3-ref2va-test
+x-common: &common
+  image: h3-bench:gb10-ref2va-v1
+  platform: linux/arm64
+  init: true
+  user: "10001:10001"
+  working_dir: /opt/h3-api/app
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  environment:
+    HF_HOME: /srv/h3/ref2va-test/cache/hf
+    XDG_CACHE_HOME: /srv/h3/ref2va-test/cache
+    HF_HUB_DISABLE_XET: "1"
+    SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+    REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+  volumes:
+    - type: bind
+      source: /srv/h3/models
+      target: /srv/h3/models
+      read_only: true
+      bind: {create_host_path: false}
+    - type: bind
+      source: /srv/h3/ref2va-test
+      target: /srv/h3/ref2va-test
+      bind: {create_host_path: false}
+    - type: bind
+      source: ${H3_REF2VA_CASE_DIR:?set private case directory}
+      target: /case
+      read_only: true
+      bind: {create_host_path: false}
+services:
+  download:
+    <<: *common
+    command: ["/opt/h3-api/inference-venv/bin/python", "-m", "benchmark.ref2va.assets"]
+  test:
+    <<: *common
+    build:
+      context: ../..
+      dockerfile: benchmark/ref2va/Dockerfile
+      args:
+        BASE_IMAGE: ${H3_REF2VA_BASE_IMAGE:-h3-api:gb10-turbo-v1}
+    shm_size: 32gb
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: ["/opt/h3-api/app/.venv/bin/python", "-m", "benchmark.ref2va.run"]

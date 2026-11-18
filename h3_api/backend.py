@@ -13,6 +13,16 @@ import httpx
 from h3_api.settings import Settings
 
 
+def check_backend_port_available(port):
+    with socket.socket() as sock:
+        if os.name == "posix":
+            # Match uvicorn's listener behavior: old accepted sockets in TIME_WAIT
+            # must not block a cold switch. A live listening server still conflicts.
+            # Never use SO_REUSEPORT, which could admit two concurrent listeners.
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(("127.0.0.1", port))
+
+
 def linux_group_has_live_members(group_id):
     """Check descendants too; zombies no longer retain a CUDA context."""
     for entry in Path("/proc").iterdir():
@@ -191,8 +201,7 @@ class SGLangBackend:
         args = self.command(variant)
         context = self.launch_context(variant)
         # A different service must not be mistaken for our new worker during startup.
-        with socket.socket() as sock:
-            sock.bind(("127.0.0.1", self.settings.backend_port))
+        check_backend_port_available(self.settings.backend_port)
         self.state = "loading"
         self.variant = variant
         logs = self.settings.data_dir / "logs"

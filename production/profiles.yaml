@@ -1,0 +1,11 @@
+# Merge AFTER production/compose.yaml. Same queue, key, address, and one worker.
+services:
+  h3-api:
+    image: h3-api:gb10-profiles-v1
+    build:
+      context: ..
+      dockerfile: production/Dockerfile.profiles
+      args:
+        BASE_IMAGE: ${H3_PROFILES_BASE_IMAGE:-h3-api:gb10-turbo-v1}
+    environment:
+      H3_REF2VA_LORA: /srv/h3/models/loras/lightx2v-ref2va-v01/minimax_h3_ref2v_turbo_4step_v0.1_bf16.safetensors

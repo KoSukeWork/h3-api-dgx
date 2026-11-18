@@ -1,0 +1,10 @@
+# Allow only the isolated runner and its CPU orchestration dependencies.
+**
+!benchmark/
+!benchmark/__init__.py
+!benchmark/assets.py
+!benchmark/run.py
+!benchmark/ref2va/
+!benchmark/ref2va/Dockerfile
+!benchmark/ref2va/Dockerfile.dockerignore
+!benchmark/ref2va/*.py

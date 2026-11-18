@@ -1,5 +1,8 @@
 # H3 Turbo 正式 API：独立、非量化、可调步数
 
+本页保留原 Larry 单配方部署路径。已有服务增加 LightX2V Ref2VA、按请求选择配方时，
+请使用 [双配方升级说明](../docs/PROFILES.md) 的 `profiles.yaml` 覆盖配置，保留原目录用于回退。
+
 ## 当前方案
 
 - 使用 BF16 主模型 + Larry Turbo v4，动态 LoRA；已有单台 GB10 横评记录，部署到新环境仍需验收。

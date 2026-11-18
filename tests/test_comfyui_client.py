@@ -12,6 +12,15 @@ from comfyui_client.config import connection_settings
 from scripts.package_comfyui import CLIENT_FILES, build_archive
 
 
+def test_profile_selection_is_optional_and_allowlisted():
+    assert node.profile_payload("auto") == {}
+    assert node.profile_payload("lightx2v-ref2va-v0.1") == {"profile": "lightx2v-ref2va-v0.1"}
+    with pytest.raises(ValueError):
+        node.profile_payload("/some/server/path")
+    optional = node.H3RemoteVideo.INPUT_TYPES()["optional"]
+    assert list(optional)[-1] == "profile"  # Do not shift older serialized widgets.
+
+
 def write_config(path, **overrides):
     data = {"H3_API_URL": "http://dgx.example:8000/", "H3_API_KEY": "test-only-key"}
     data.update(overrides)

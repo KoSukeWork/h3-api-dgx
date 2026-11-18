@@ -13,11 +13,13 @@ ComfyUI 和其他开发工具均通过 HTTP 调用；模型在 DGX 的 ARM64/GB1
 
 | 场景 | 文档 |
 | --- | --- |
+| 已有服务增加参考图与指定 LoRA 配方 | [双配方 API](docs/PROFILES.md) |
 | 当前 DGX 已有成功运行的 BF16/Turbo 镜像和模型 | [正式 API 部署](production/README.md) |
 | 新 DGX，没有之前的镜像或安装目录 | [从零部署](docs/FRESH_INSTALL.md) |
 | 换机、备份、回退，希望尽量复现已跑通环境 | [备份与恢复](docs/BACKUP_RESTORE.md) |
 | 想核对参数、测速及兼容补丁 | [部署记录](docs/DEPLOYMENT_RECORD.md) |
 | 在另一台 ComfyUI 上远程调用，无需本地 H3 权重 | [远程节点安装与配置](comfyui_client/README.md) |
+| 独立复查 LightX2V Ref2VA 参考图 LoRA | [Ref2VA 测试说明](benchmark/ref2va/README.md) |
 
 默认 8 次推理，支持按请求切换，不重新加载模型：
 
@@ -28,7 +30,8 @@ ComfyUI 和其他开发工具均通过 HTTP 调用；模型在 DGX 的 ARM64/GB1
 `preset: fast` 为 4 次、`preset: quality` 为 8 次；也可换成 `steps: 12`。
 两者二选一。自定义范围 1～49；增加步数不保证画质更好，4/8 之外需自行验证。
 外层 `steps` 是实际推理次数，内部自动转换为 SGLang 的 `num_inference_steps=steps+1`。
-当前 Turbo 配方支持 t2va/fl2va，不接受 ref2va；实测记录来自 t2va。
+默认单配方部署支持 t2va/fl2va；启用 [双配方配置](docs/PROFILES.md) 后，ref2va 自动选用
+LightX2V 专用底模/LoRA，也可按请求指定 `profile`。LightX2V 固定 4 步，不沿用 Larry 自定义步数范围。
 
 ## 仓库内容
 
@@ -52,7 +55,8 @@ SGLang commit、CUDA 基础镜像摘要、模型 revision 和 SHA256 固定；�
 **换机最稳妥的是备份并恢复验收后的正式 Docker 镜像 + 模型**。
 
 已有 GB10 测速：768p、约 5 秒视频，Turbo 8 次 440.46 秒，4 次 248.10 秒。
-正式 API 与新从零构建配方仍须在 DGX 上验收；本机只执行 CPU 测试/配置校验，不做 x86 GPU 测试。
+已有服务的双配方升级已通过 [GB10 正式 API 验收](docs/PROFILES_DGX_ACCEPTANCE.md)。
+新机器和从零构建仍须另行验收；本机只执行 CPU 测试/配置校验，不做 x86 GPU 测试。
 
 ## 开发与打包
 

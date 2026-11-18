@@ -50,6 +50,7 @@ def main():
     parser.add_argument("--url", required=True)
     parser.add_argument("--prompt", required=True)
     parser.add_argument("--task", choices=["t2va", "fl2va", "ref2va"], default="t2va")
+    parser.add_argument("--profile", choices=["auto", "larry-turbo-v4", "lightx2v-ref2va-v0.1"], default="auto")
     parser.add_argument("--first-frame", type=Path)
     parser.add_argument("--last-frame", type=Path)
     parser.add_argument("--reference", type=Path, action="append", default=[])
@@ -95,6 +96,8 @@ def main():
         }
         if args.preset is not None:
             payload["preset"] = args.preset
+        if args.profile != "auto":
+            payload["profile"] = args.profile
         if args.steps is not None:
             payload["steps"] = args.steps
         generate(client, payload, args.output)

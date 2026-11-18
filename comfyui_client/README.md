@@ -107,3 +107,12 @@ HTTP 只适用于可信内网，跨网络访问应使用 HTTPS/VPN 及适当访�
 包内顶层只有 `h3_api_client/`，只包含代码、示例配置、说明和许可，不包含真实配置或视频。
 CPU 测试覆盖配置与模拟 HTTP 工作流；`node --experimental-vm-modules --test tests/comfyui_preview.test.mjs`
 检查前端扩展的播放器、下载链接和生命周期。首次在真实 ComfyUI/DGX 上仍需验收。
+
+## 双配方服务补充
+
+连接已升级的 DGX 时，节点的 `profile` 可选 `auto`（默认）、`larry-turbo-v4`、
+`lightx2v-ref2va-v0.1`。auto 按 task 路由；旧工作流不加此字段也可使用。
+参考图：task 选 ref2va，图片接 reference_images，sampling 选 server_default/fast，
+或 custom + steps=4。LightX2V 不接受 quality 或其他步数，也不用于首尾帧。
+控件追加在末尾，原有预览/下载不变；覆盖新版节点后须重启 ComfyUI 并强制刷新页面。
+更多约束与 HTTP 示例见 [双配方 API](../docs/PROFILES.md)。

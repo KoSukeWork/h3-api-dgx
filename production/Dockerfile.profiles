@@ -1,0 +1,14 @@
+# Build on DGX only; the known existing image contains all runtime dependencies.
+ARG BASE_IMAGE=h3-api:gb10-turbo-v1
+FROM ${BASE_IMAGE}
+USER root
+RUN test "$(uname -m)" = aarch64
+RUN --mount=type=bind,source=benchmark/patch_lora_compat.py,target=/tmp/patch_lora_compat.py,ro \
+    python3 /tmp/patch_lora_compat.py
+RUN --mount=type=bind,source=benchmark/ref2va/patch_reference.py,target=/tmp/patch_reference.py,ro \
+    python3 /tmp/patch_reference.py
+WORKDIR /opt/h3-api/app
+COPY h3_api/ ./h3_api/
+COPY examples/ ./examples/
+USER 10001:10001
+CMD ["/opt/h3-api/app/.venv/bin/uvicorn", "h3_api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

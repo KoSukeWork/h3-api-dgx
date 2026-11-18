@@ -16,7 +16,8 @@ from starlette.responses import JSONResponse
 
 from h3_api.backend import SGLangBackend
 from h3_api.media import validate_input
-from h3_api.schemas import VideoRequest
+from h3_api.profiles import catalog, resolve
+from h3_api.schemas import JobResponse, VideoRequest
 from h3_api.settings import Settings
 from h3_api.store import QueueFull, Store
 from h3_api.worker import Worker
@@ -78,13 +79,20 @@ class RequestGuard:
 
 def create_app(
     settings=None,
-    backend_factory=SGLangBackend,
+    backend_factory=None,
     *,
     run_worker=True,
     input_validator=validate_input,
     output_validator=None,
 ):
     settings = settings or Settings.from_env()
+    if backend_factory is None:
+        if settings.ref2va_lora:
+            from h3_api.profile_backend import ProfileBackend
+
+            backend_factory = ProfileBackend
+        else:
+            backend_factory = SGLangBackend
     store = Store(settings.data_dir / "jobs.sqlite3")
     auth = HTTPBearer(auto_error=False)
 
@@ -124,7 +132,7 @@ def create_app(
 
     app = FastAPI(
         title="H3 BF16 API",
-        version="0.2.0",
+        version="0.3.0",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,
@@ -158,6 +166,8 @@ def create_app(
             "accepting_requests": alive,
             "backend_state": worker.backend.state,
             "loaded_variant": worker.backend.variant,
+            "loaded_profile": getattr(worker.backend, "loaded_profile", None),
+            "profiles": catalog(settings),
             "active_job_id": worker.active_id,
             "jobs": store.counts(),
             "last_error": worker.last_error,
@@ -166,9 +176,13 @@ def create_app(
                 "default_steps": 8 if settings.turbo_lora else 49,
                 "presets": {"fast": 4, "quality": 8} if settings.turbo_lora else {},
                 "custom_steps_range": [1, 49] if settings.turbo_lora else None,
-                "supported_tasks": ["t2va", "fl2va"] if settings.turbo_lora else ["t2va", "fl2va", "ref2va"],
+                "supported_tasks": ["t2va", "fl2va"] if settings.turbo_lora and not settings.ref2va_lora else ["t2va", "fl2va", "ref2va"],
             },
         }
+
+    @app.get("/v1/profiles", dependencies=[Depends(authorized)])
+    async def profiles():
+        return {"profiles": catalog(settings), "selection": "auto-by-task", "concurrency": 1}
 
     @app.post("/v1/files", dependencies=[Depends(authorized)], status_code=201)
     async def upload(file: UploadFile):
@@ -215,16 +229,17 @@ def create_app(
             "updated_at": job["updated"],
             "error": job["error"],
             "sampling": saved.get("_sampling"),
+            "profile": saved.get("_profile"),
             "content_url": f"/v1/videos/{job['id']}/content" if job["status"] == "completed" else None,
         }
 
-    @app.post("/v1/videos", dependencies=[Depends(authorized)], status_code=202)
+    @app.post("/v1/videos", dependencies=[Depends(authorized)], status_code=202, response_model=JobResponse)
     async def submit(body: VideoRequest, request: Request):
         task = request.app.state.scheduler_task
         if run_worker and (task is None or task.done()):
             raise HTTPException(503, "Scheduler unavailable")
         try:
-            sampling = body.sampling(settings.turbo_lora is not None)
+            profile, sampling = resolve(body, settings)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         for condition in body.conditions:
@@ -234,12 +249,14 @@ def create_app(
             if file["kind"] != condition.type:
                 raise HTTPException(422, f"File type mismatch: {condition.file_id}")
         try:
-            job_id = store.submit({**body.model_dump(), "_sampling": sampling}, settings.max_queue)
+            job_id = store.submit(
+                {**body.model_dump(), "_sampling": sampling, "_profile": profile}, settings.max_queue
+            )
         except QueueFull as exc:
             raise HTTPException(429, "Queue full; retry later", headers={"Retry-After": "60"}) from exc
         return public(store.get(job_id))
 
-    @app.get("/v1/videos/{job_id}", dependencies=[Depends(authorized)])
+    @app.get("/v1/videos/{job_id}", dependencies=[Depends(authorized)], response_model=JobResponse)
     async def status(job_id: str):
         job = store.get(job_id)
         if not job:

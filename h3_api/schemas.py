@@ -7,6 +7,23 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class SamplingResult(StrictModel):
+    mode: Literal["turbo", "base"]
+    steps: int
+    num_inference_steps: int
+
+
+class JobResponse(StrictModel):
+    id: str
+    status: Literal["queued", "loading", "running", "completed", "failed"]
+    created_at: float
+    updated_at: float
+    error: str | None
+    sampling: SamplingResult | None
+    profile: Literal["base", "larry-turbo-v4", "lightx2v-ref2va-v0.1"] | None
+    content_url: str | None
+
+
 class Condition(StrictModel):
     type: Literal["image", "video", "audio"]
     file_id: str = Field(pattern=r"^file_[a-f0-9]{32}$")
@@ -31,6 +48,9 @@ class Target(StrictModel):
 
 class VideoRequest(StrictModel):
     task: Literal["t2va", "fl2va", "ref2va"]
+    profile: Literal["auto", "larry-turbo-v4", "lightx2v-ref2va-v0.1"] = Field(
+        default="auto", description="Server-approved recipe. auto selects by task; never a file path."
+    )
     prompt: str = Field(min_length=1, max_length=7000)
     conditions: list[Condition] = Field(default_factory=list, max_length=12)
     target: Target = Field(default_factory=Target)

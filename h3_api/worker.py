@@ -3,6 +3,7 @@ import json
 import logging
 
 from h3_api.media import validate_output
+from h3_api.profiles import LIGHTX, resolve
 from h3_api.schemas import VideoRequest
 
 logger = logging.getLogger(__name__)
@@ -21,9 +22,11 @@ class Worker:
         data = request.model_dump()
         data.pop("preset")
         data.pop("steps")
-        data["num_inference_steps"] = request.sampling(self.settings.turbo_lora is not None)[
-            "num_inference_steps"
-        ]
+        data.pop("profile")
+        profile, sampling = resolve(request, self.settings)
+        data["num_inference_steps"] = sampling["num_inference_steps"]
+        if profile == LIGHTX:
+            data.update(flow_shift=12.0, audio_flow_shift=3.0)
         for condition in data["conditions"]:
             uploaded = self.store.file(condition.pop("file_id"))
             if not uploaded:
@@ -50,11 +53,18 @@ class Worker:
         try:
             saved = json.loads(job["request"])
             sampling = saved.pop("_sampling", None)
+            saved_profile = saved.pop("_profile", None)
             request = VideoRequest.model_validate(saved)
-            if sampling is not None and sampling != request.sampling(self.settings.turbo_lora is not None):
+            profile, current_sampling = resolve(request, self.settings)
+            if (sampling is not None and sampling != current_sampling) or (
+                saved_profile is not None and saved_profile != profile
+            ):
                 raise ValueError("Service sampling mode changed since submission; resubmit this task")
             payload = self.payload(request)
-            await self.backend.ensure(request.variant)
+            if self.settings.ref2va_lora:
+                await self.backend.ensure(request.variant, profile=profile)
+            else:
+                await self.backend.ensure(request.variant)
             phase = "running"
             self.store.update(job_id, phase)
             async with asyncio.timeout(self.settings.task_timeout):

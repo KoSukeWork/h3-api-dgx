@@ -23,6 +23,15 @@ def sampling_payload(sampling, steps):
     raise ValueError("Unknown H3 sampling mode")
 
 
+def profile_payload(profile):
+    # Omitting auto keeps this client compatible with older single-profile servers.
+    if profile == "auto":
+        return {}
+    if profile not in ("larry-turbo-v4", "lightx2v-ref2va-v0.1"):
+        raise ValueError("Unknown H3 profile")
+    return {"profile": profile}
+
+
 def checked_id(value, prefix):
     if not isinstance(value, str) or not re.fullmatch(prefix + r"_[a-f0-9]{32}", value):
         raise RuntimeError("H3 server returned an invalid identifier")
@@ -60,6 +69,7 @@ class H3RemoteVideo:
                 "reference_images": ("IMAGE",),
                 "sampling": (["server_default", "fast", "quality", "custom"],),
                 "steps": ("INT", {"default": 8, "min": 1, "max": 49}),
+                "profile": (["auto", "larry-turbo-v4", "lightx2v-ref2va-v0.1"],),
             },
         }
 
@@ -84,12 +94,14 @@ class H3RemoteVideo:
         reference_images=None,
         sampling="server_default",
         steps=8,
+        profile="auto",
     ):
         import comfy.model_management
         import folder_paths
 
         base, api_key = connection_settings()
         sampling_args = sampling_payload(sampling, steps)
+        profile_args = profile_payload(profile)
         # Keep credentials out of serialized workflows.
         headers = {"Authorization": "Bearer " + api_key}
         conditions = []
@@ -138,6 +150,7 @@ class H3RemoteVideo:
                     "seed": seed,
                     "quality": "lossless",
                     **sampling_args,
+                    **profile_args,
                     "target": {
                         "short_edge": int(short_edge),
                         "aspect_ratio": aspect_ratio,

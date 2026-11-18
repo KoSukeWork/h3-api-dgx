@@ -4,8 +4,9 @@
 - Target: DGX Spark GB10, Linux aarch64, sm_121. Never run GPU inference, ARM image builds or GPU package installation on the Windows/x86 development machine. CPU-only unit tests and Compose config validation are allowed.
 - Default production deployment is non-quantized BF16 Transformer + Larry Turbo v4, not local ComfyUI inference. Quantization tooling under benchmark is optional historical comparison only.
 - Preserve the pinned QKV-layout and LoRA/MXFP8 compatibility fixes. Do not bypass their source/hash checks or apply BF16 assumptions to arbitrary checkpoints.
-- presets fast/quality map to 4/8 actual evaluations; custom steps are actual evaluations, while the internal SGLang request uses steps + 1. Step changes must not reload the same model.
+- Larry presets fast/quality map to 4/8 actual evaluations; custom steps are actual evaluations, while the internal SGLang request uses steps + 1. LightX2V Ref2VA v0.1 is fixed at 4 evaluations and rejects other step counts/quality preset. Step changes must not reload the same profile.
 - Keep one GPU model worker. Current Turbo LoRA is FL2VA-specific; do not silently apply it to Ref2VA.
+- Multi-profile deployment uses production/profiles.yaml and server-approved recipe IDs. Bind LoRA, base variant, alpha, shifts and reference preprocessing together; fully stop the old process group before loading another profile. Keep existing single-profile deployments and queued sampling snapshots compatible.
 - Never commit API keys, HF tokens, local CA certificates, weights, generated videos, caches or image archives. Package scripts must retain their explicit allowlist.
 - Cleanup must inspect exact targets first and preserve models/results/certificates. Do not delete broad directories or run global Docker prune commands.
 - Do not call a new deployment GPU-validated based only on CPU tests or the saved historical benchmark.
